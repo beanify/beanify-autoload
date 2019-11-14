@@ -6,7 +6,5 @@ module.exports=beanifyPlugin((beanify,opts,done)=>{
 
     beanify.decorate('test',config)
 
-    console.log("111111111->beanifyPlugin")
-
     done()
 })

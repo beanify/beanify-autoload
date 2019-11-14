@@ -139,7 +139,6 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
                 if (loadedPlugins[name]) return
 
                 beanify.register(plugin, options)
-                console.log('0000->registerPlugin:',name)
                 loadedPlugins[name] = true
             }
 
@@ -157,10 +156,6 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
             }
 
             const keys=Object.keys(plugins)
-
-            console.log({
-                plugins
-            })
 
             for(let idx=0;idx<keys.length;idx++){
                 cyclicDependencyCheck={}

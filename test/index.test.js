@@ -12,19 +12,30 @@ const beanifyOpts = {
 
 tap.test('beanify-autoload test', (t) => {
 
-    t.plan(2)
+    t.plan(4)
 
     const b = new Beanify(beanifyOpts)
     b.register(require("../index"), {
         dir: path.join(__dirname, "plugin")
     }).ready((err) => {
+        // console.log(b.$plugins)
         t.error(err)
         t.strictSame(b.test, {
             value: 30,
             str: 'this is string'
         }, 'check beanify.test')
-        console.log(b.$plugins)
-        b.close()
+        
+        b.inject({
+            url:'math.add',
+            body:{
+                a:1,
+                b:3
+            }
+        },(err,res)=>{
+            t.error(err)
+            t.equal(res,4,'check res')
+            b.close()
+        })
     })
 
 })

@@ -16,11 +16,11 @@
   "author": "beanjs",
   "license": "MIT",
   "dependencies": {
-    "beanify-plugin": "^1.0.3",
+    "beanify-plugin": "^1.0.6",
     "steed": "^1.1.3"
   },
   "devDependencies": {
-    "beanify": "^1.0.7",
+    "beanify": "^1.0.8",
     "tap": "^14.9.2"
   },
   "repository": {
