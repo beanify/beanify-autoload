@@ -98,7 +98,7 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
             const plugins = {}
 
             for (let idx = 0; idx < stats.length; idx++) {
-                const { skip, file, opts } = stats[i]
+                const { skip, file, opts } = stats[idx]
 
                 if (skip) {
                     continue
@@ -108,9 +108,10 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
                     const plugin = require(file)
                     const pluginOptions = Object.assign({}, defaultPluginOptions)
                     const pluginMeta = plugin[beanifyPlugin.pluginMeta]
-                    const pluginName = pluginMeta.name || file;
-
+                    
                     if (pluginMeta) {
+                        const pluginName = pluginMeta.name || file;
+
                         const prefix = pluginOptions.prefix || ''
                         plugin[beanifyPlugin.pluginPrefix] = prefix
 
@@ -138,6 +139,7 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
                 if (loadedPlugins[name]) return
 
                 beanify.register(plugin, options)
+                console.log('0000->registerPlugin:',name)
                 loadedPlugins[name] = true
             }
 
@@ -156,11 +158,15 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
 
             const keys=Object.keys(plugins)
 
+            console.log({
+                plugins
+            })
+
             for(let idx=0;idx<keys.length;idx++){
                 cyclicDependencyCheck={}
 
                 try{
-                    loadPlugin(plugins[keys[i]])
+                    loadPlugin(plugins[keys[idx]])
                 }catch(e){
                     done(e)
                     return
