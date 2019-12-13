@@ -1,10 +1,8 @@
-const beanifyPlugin=require("beanify-plugin")
-const config=require("./config")
+const beanifyPlugin = require('beanify-plugin')
+const config = require('./config')
 
-module.exports=beanifyPlugin((beanify,opts,done)=>{
-    
+module.exports = beanifyPlugin((beanify, opts, done) => {
+  beanify.decorate('test', config)
 
-    beanify.decorate('test',config)
-
-    done()
+  done()
 })

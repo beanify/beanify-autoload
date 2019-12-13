@@ -1,5 +1,7 @@
 # beanify-autoload
 
+[![JavaScript Style Guide](https://cdn.rawgit.com/standard/standard/master/badge.svg)](https://github.com/standard/standard)
+
 ## install
 
 ```
@@ -15,7 +17,7 @@ npm i beanify-autoload
 
 ## usage 
 
-```
+```javascript
 const Beanify=require("beanify")
 const beanifyPlugin=require("beanify-plugin")
 const path=require("path")
