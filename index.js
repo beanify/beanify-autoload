@@ -50,8 +50,8 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
             const fileList = files.join('\n')
 
             if (!packagePattern.test(fileList) &&
-                            !indexPattern.test(fileList) &&
-                            scriptPattern.test(fileList)) {
+              !indexPattern.test(fileList) &&
+              scriptPattern.test(fileList)) {
               const loaded = []
 
               for (let idx = 0; idx < files.length; idx++) {
@@ -106,8 +106,11 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
           if (pluginMeta) {
             const pluginName = pluginMeta.name || file
 
-            const prefix = pluginOptions.prefix || ''
-            plugin[beanifyPlugin.pluginPrefix] = prefix
+            const oPrefix = plugin[beanifyPlugin.pluginPrefix]
+            if (oPrefix == '') {
+              const prefix = pluginOptions.prefix || ''
+              plugin[beanifyPlugin.pluginPrefix] = prefix
+            }
 
             if (plugins[pluginName]) {
               throw new Error(`Duplicate plugin: ${pluginName}`)
@@ -128,7 +131,7 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
 
       const loadedPlugins = {}
 
-      function registerPlugin (name, plugin, options) {
+      function registerPlugin(name, plugin, options) {
         if (loadedPlugins[name]) return
 
         beanify.register(plugin, options)
@@ -137,7 +140,7 @@ module.exports = beanifyPlugin((beanify, opts, done) => {
 
       let cyclicDependencyCheck = {}
 
-      function loadPlugin ({ plugin, name, dependencies = [], options }) {
+      function loadPlugin({ plugin, name, dependencies = [], options }) {
         if (cyclicDependencyCheck[name]) throw new Error('Cyclic dependency')
 
         if (dependencies.length) {
