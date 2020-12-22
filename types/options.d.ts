@@ -1,11 +1,15 @@
-import { Beanify, PluginDoneCallback } from 'beanify'
+import { Beanify, PluginDoneCallback, PluginOptions } from 'beanify'
 
-export interface AutoloadOptions {
-  dir?: string
+export interface AutoloadOptions extends PluginOptions {
+  dir: string
+  dirAsScope?: boolean
+  ignorePattern?: RegExp
+  indexPattern?: RegExp
+  maxDepth?: number
 }
 
 export type BeanifyAutoload = (
   beanify: Beanify,
   opts: AutoloadOptions,
-  done?: PluginDoneCallback
-) => PromiseLike<void> | void
+  done: PluginDoneCallback
+) => Promise<void>
