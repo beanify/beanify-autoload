@@ -40,7 +40,7 @@ beanify
 ## Options
 
 - `dir`: (required) - Base directory containing plugins to be loaded
-- `dirAsScope`: Make each directory your scope.default true
+- `dirAsScope`: Make each directory a new scope.default true
 - `ignorePattern`: Regex matching any file that should not be loaded
 - `indexPattern`: Regex to override the `index.js` naming convention
 - `maxDepth`: Limits the depth at which nested plugins are loaded

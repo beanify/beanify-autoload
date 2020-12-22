@@ -1,6 +1,6 @@
 {
   "name": "beanify-autoload",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "beanify-autoload ",
   "main": "index.js",
   "scripts": {
