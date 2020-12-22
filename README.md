@@ -1,37 +1,46 @@
 # beanify-autoload
 
-[![JavaScript Style Guide](https://cdn.rawgit.com/standard/standard/master/badge.svg)](https://github.com/standard/standard)
+Convenience plugin for Beanify that loads all plugins found in a directory
 
-## install
+## Install
 
+```bash
+npm i beanify-autoload --save
 ```
-npm i beanify-autoload
+
+with yarn
+
+```bash
+yarn add beanify-autoload
 ```
 
-## options
-
-* ```dir```:
-* ```options```:If you want to pass some custom options to the registered plugins via fastify-autoload, use the ```options``` key
-* ```ignorePattern```:If you have some files in the folder that you'd like autoload to skip you can set ```ignorePattern``` option to a regex. If that matches a file it will not load it.
-* ```includeTypeScript```:If you are using TypeScript and something like ts-node to load the .ts files directly you can set ```includeTypeScript``` option to true. This will load plugins from .ts files as well as .js files.
-
-## usage 
+## Usage
 
 ```javascript
-const Beanify=require("beanify")
-const beanifyPlugin=require("beanify-plugin")
-const path=require("path")
+const Beanify = require('beanify')
+const Autoload = require('beanify-autoload')
 
-const b=new Beanify({})
+const path = require('path')
 
-b
-    .register(require("beanify-autoload"),{
-        dir:path.join(__dirname, 'foo')
-    })
-    .ready((err)=>{
+const beanify = Beanify({})
 
-        b.close()
-    })
-
-
+beanify
+  .register(Autoload, {
+    dir: path.join(__dirname, 'test')
+    // dirAsScope: false
+    // name: 'aaa'
+    // prefix: 'bbb'
+  })
+  .ready(e => {
+    console.log(e && e.message)
+    beanify.print()
+  })
 ```
+
+## Options
+
+- `dir`: (required) - Base directory containing plugins to be loaded
+- `dirAsScope`: Make each directory your scope.default true
+- `ignorePattern`: Regex matching any file that should not be loaded
+- `indexPattern`: Regex to override the `index.js` naming convention
+- `maxDepth`: Limits the depth at which nested plugins are loaded

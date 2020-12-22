@@ -1,172 +1,69 @@
-const beanifyPlugin = require('beanify-plugin')
-const fs = require('fs')
+const { readdir } = require('fs').promises
 const path = require('path')
-const steed = require('steed')
 
-module.exports = beanifyPlugin((beanify, opts, done) => {
+const defaults = {
+  scriptPattern: /((^.?|\.[^d]|[^.]d|[^.][^d])\.ts|\.js|\.cjs|\.mjs)$/i,
+  indexPattern: /^index(\.ts|\.js|\.cjs|\.mjs)$/i,
+  dirAsScope: true
+}
+
+async function loadDirents (beanify, dir, depth, opts) {
   const {
-    dir,
+    indexPattern,
     ignorePattern,
-    includeTypeScript,
-    options: defaultPluginOptions
+    scriptPattern,
+    maxDepth,
+    dirAsScope
   } = opts
 
-  const scriptPattern = includeTypeScript
-    ? /\.(ts|js)$/im
-    : /\.js$/im
+  const list = await readdir(dir, { withFileTypes: true })
 
-  const packagePattern = /^package\.json$/im
-  const indexPattern = includeTypeScript
-    ? /^index\.(ts|js)$/im
-    : /^index\.js$/im
+  const idxDirent = list.find(dirent => indexPattern.test(dirent.name))
+  if (idxDirent) {
+    const file = path.join(dir, idxDirent.name)
+    beanify.register(require(file))
 
-  fs.readdir(dir, function (err, list) {
-    if (err) {
-      done(err)
+    const hasDirectory = list.find(dirent => dirent.isDirectory())
+    if (!hasDirectory) {
       return
     }
+  }
 
-    steed.map(list, (file, next) => {
-      if (ignorePattern && file.match(ignorePattern)) {
-        next(null, { skip: true })
-        return
-      }
+  for (const dirent of list) {
+    if (ignorePattern && dirent.name.match(ignorePattern)) {
+      continue
+    }
 
-      const toLoad = path.join(dir, file)
-
-      fs.stat(toLoad, (err, stat) => {
-        if (err) {
-          next(err)
-          return
-        }
-
-        if (stat.isDirectory()) {
-          fs.readdir(toLoad, (err, files) => {
-            if (err) {
-              next(err)
-              return
-            }
-
-            const fileList = files.join('\n')
-
-            if (!packagePattern.test(fileList) &&
-              !indexPattern.test(fileList) &&
-              scriptPattern.test(fileList)) {
-              const loaded = []
-
-              for (let idx = 0; idx < files.length; idx++) {
-                const file = files[idx]
-
-                loaded.push({
-                  skip: !scriptPattern.test(file),
-                  opts: {
-                    prefix: toLoad.split(path.sep).pop()
-                  },
-                  file: path.join(toLoad, file)
-                })
-              }
-
-              next(null, loaded)
-            } else {
-              next(null, {
-                skip: files.every(name => !scriptPattern.test(name)),
-                file: toLoad
-              })
-            }
-          })
-        } else {
-          next(null, {
-            skip: !(stat.isFile() && scriptPattern.test(file)),
-            file: toLoad
-          })
-        }
-      })
-    }, (err, files) => {
-      if (err) {
-        done(err)
-        return
-      }
-
-      const stats = [].concat(...files)
-
-      const plugins = {}
-
-      for (let idx = 0; idx < stats.length; idx++) {
-        const { skip, file } = stats[idx]
-
-        if (skip) {
-          continue
-        }
-
-        try {
-          const plugin = require(file)
-          const pluginOptions = Object.assign({}, defaultPluginOptions)
-          const pluginMeta = plugin[beanifyPlugin.pluginMeta]
-
-          if (pluginMeta) {
-            const pluginName = pluginMeta.name || file
-
-            const oPrefix = plugin[beanifyPlugin.pluginPrefix]
-            if (oPrefix == '') {
-              const prefix = pluginOptions.prefix || ''
-              plugin[beanifyPlugin.pluginPrefix] = prefix
-            }
-
-            if (plugins[pluginName]) {
-              throw new Error(`Duplicate plugin: ${pluginName}`)
-            }
-
-            plugins[pluginName] = {
-              plugin,
-              name: pluginName,
-              dependencies: pluginMeta.dependencies,
-              // decorators:pluginMeta.decorators,
-              options: pluginOptions
-            }
+    const isMaxDepth = Number.isFinite(maxDepth) && maxDepth <= depth
+    const file = path.join(dir, dirent.name)
+    if (dirent.isDirectory() && !isMaxDepth) {
+      if (dirAsScope === true) {
+        // new scope
+        beanify.register(
+          async ins => {
+            // recursion
+            await loadDirents(ins, file, depth + 1, opts)
+          },
+          {
+            name: dirent.name,
+            prefix: dirent.name
           }
-        } catch (e) {
-          done(e)
-        }
+        )
+      } else {
+        // recursion
+        await loadDirents(beanify, file, depth + 1, opts)
       }
+    } else if (idxDirent) {
+      continue
+    }
 
-      const loadedPlugins = {}
+    if (dirent.isFile() && scriptPattern.test(dirent.name)) {
+      beanify.register(require(file))
+    }
+  }
+}
 
-      function registerPlugin(name, plugin, options) {
-        if (loadedPlugins[name]) return
-
-        beanify.register(plugin, options)
-        loadedPlugins[name] = true
-      }
-
-      let cyclicDependencyCheck = {}
-
-      function loadPlugin({ plugin, name, dependencies = [], options }) {
-        if (cyclicDependencyCheck[name]) throw new Error('Cyclic dependency')
-
-        if (dependencies.length) {
-          cyclicDependencyCheck[name] = true
-          dependencies.forEach((name) => plugins[name] && loadPlugin(plugins[name]))
-        }
-
-        registerPlugin(name, plugin, options)
-      }
-
-      const keys = Object.keys(plugins)
-
-      for (let idx = 0; idx < keys.length; idx++) {
-        cyclicDependencyCheck = {}
-
-        try {
-          loadPlugin(plugins[keys[idx]])
-        } catch (e) {
-          done(e)
-          return
-        }
-      }
-
-      done()
-    })
-  })
-}, {
-  name: 'beanify-autoload'
-})
+module.exports = async function (beanify, options) {
+  const opts = { ...defaults, ...options }
+  await loadDirents(beanify, opts.dir, 0, opts)
+}
