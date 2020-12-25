@@ -1,6 +1,6 @@
 import { Beanify, PluginDoneCallback, PluginOptions } from 'beanify'
 
-export interface AutoloadOptions extends PluginOptions {
+export class AutoloadOptions extends PluginOptions {
   dir: string
   dirAsScope?: boolean
   ignorePattern?: RegExp
