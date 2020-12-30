@@ -1,4 +1,4 @@
-import { Beanify, PluginDoneCallback, PluginOptions } from 'beanify'
+import { Beanify, PluginDoneCallback, PluginOptions, Route } from 'beanify'
 
 export class AutoloadOptions extends PluginOptions {
   dir: string
@@ -8,8 +8,11 @@ export class AutoloadOptions extends PluginOptions {
   maxDepth?: number
 }
 
-export type BeanifyAutoload = (
-  beanify: Beanify,
-  opts: AutoloadOptions,
-  done: PluginDoneCallback
-) => Promise<void>
+export type BeanifyAutoloadRoute = (route: Route) => Route
+
+export type BeanifyAutoload = {
+  (beanify: Beanify, opts: AutoloadOptions, done: PluginDoneCallback): Promise<
+    void
+  >
+  route: BeanifyAutoloadRoute
+}

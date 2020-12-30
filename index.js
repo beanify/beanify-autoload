@@ -1,6 +1,8 @@
 const { readdir } = require('fs').promises
 const path = require('path')
 
+const kAutoloadRoute = Symbol('beanify.autoload.route')
+
 const defaults = {
   scriptPattern: /((^.?|\.[^d]|[^.]d|[^.][^d])\.ts|\.js|\.cjs|\.mjs)$/i,
   indexPattern: /^index(\.ts|\.js|\.cjs|\.mjs)$/i,
@@ -58,7 +60,14 @@ async function loadDirents (beanify, dir, depth, opts) {
     }
 
     if (dirent.isFile() && scriptPattern.test(dirent.name)) {
-      beanify.register(require(file))
+      const mod = require(file)
+      if (mod[kAutoloadRoute] === true) {
+        const ex = path.extname(dirent.name)
+        mod.url = dirent.name.replace(ex, '')
+        beanify.route(mod)
+      } else {
+        beanify.register(mod)
+      }
     }
   }
 }
@@ -66,4 +75,9 @@ async function loadDirents (beanify, dir, depth, opts) {
 module.exports = async function (beanify, options) {
   const opts = { ...defaults, ...options }
   await loadDirents(beanify, opts.dir, 0, opts)
+}
+
+module.exports.route = function (route) {
+  route[kAutoloadRoute] = true
+  return route
 }

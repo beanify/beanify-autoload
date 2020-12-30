@@ -37,6 +37,38 @@ beanify
   })
 ```
 
+with `route`
+
+```javascript
+// ./routes/math/tan.js
+const { route } = require('beanify-autoload')
+
+module.exports = route({
+  // url:'tan' route.url will be set to the file name, automatically remove the extension
+  handler (req, rep) {}
+})
+```
+
+```javascript
+// index.js
+const Beanify = require('beanify')
+const Autoload = require('beanify-autoload')
+
+const path = require('path')
+
+const beanify = Beanify({})
+
+beanify
+  .register(Autoload, {
+    dir: path.join(__dirname, 'routes'),
+    dirAsScope: true
+  })
+  .ready(e => {
+    console.log(e && e.message)
+    beanify.print()
+  })
+```
+
 ## Options
 
 - `dir`: (required) - Base directory containing plugins to be loaded
