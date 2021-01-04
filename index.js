@@ -24,11 +24,7 @@ async function loadDirents (beanify, dir, depth, opts) {
   if (idxDirent) {
     const file = path.join(dir, idxDirent.name)
     beanify.register(require(file))
-
-    const hasDirectory = list.find(dirent => dirent.isDirectory())
-    if (!hasDirectory) {
-      return
-    }
+    return
   }
 
   for (const dirent of list) {
