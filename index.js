@@ -6,7 +6,9 @@ const kAutoloadRoute = Symbol('beanify.autoload.route')
 const defaults = {
   scriptPattern: /((^.?|\.[^d]|[^.]d|[^.][^d])\.ts|\.js|\.cjs|\.mjs)$/i,
   indexPattern: /^index(\.ts|\.js|\.cjs|\.mjs)$/i,
-  dirAsScope: true
+  dirAsScope: true,
+  urlPrefix: '',
+  pathSplit: '.'
 }
 
 async function loadDirents (beanify, dir, depth, opts) {
@@ -15,7 +17,8 @@ async function loadDirents (beanify, dir, depth, opts) {
     ignorePattern,
     scriptPattern,
     maxDepth,
-    dirAsScope
+    dirAsScope,
+    urlPrefix
   } = opts
 
   const list = await readdir(dir, { withFileTypes: true })
@@ -44,7 +47,7 @@ async function loadDirents (beanify, dir, depth, opts) {
           },
           {
             name: dirent.name,
-            prefix: dirent.name
+            prefix: `${urlPrefix}${dirent.name}`
           }
         )
       } else {
@@ -59,7 +62,8 @@ async function loadDirents (beanify, dir, depth, opts) {
       const mod = require(file)
       if (mod[kAutoloadRoute] === true) {
         const ex = path.extname(dirent.name)
-        mod.url = dirent.name.replace(ex, '')
+        mod.url = `${urlPrefix}${dirent.name.replace(ex, '')}`
+        mod.$IsAutoload = true
         beanify.route(mod)
       } else {
         beanify.register(mod)
@@ -70,6 +74,20 @@ async function loadDirents (beanify, dir, depth, opts) {
 
 module.exports = async function (beanify, options) {
   const opts = { ...defaults, ...options }
+
+  beanify.addHook('onRoute', function (route) {
+    const { url, $IsAutoload = false } = route
+    const { pathSplit } = opts
+
+    if ($IsAutoload) {
+      const urlMatch = `${pathSplit}_`
+      const urlReplace = `${pathSplit}:`
+      while (route.url.indexOf(urlMatch) >= 0) {
+        route.url = url.replace(urlMatch, urlReplace)
+      }
+    }
+  })
+
   await loadDirents(beanify, opts.dir, 0, opts)
 }
 
